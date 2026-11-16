@@ -1,6 +1,7 @@
 from entidades.base import Base
 from entidades.categoria import Categoria
 from excepciones import DatoInvalidoError, PrecioInvalidoError
+from formato import formato_pesos
 
 
 class Producto(Base):
@@ -23,7 +24,7 @@ class Producto(Base):
         self.stock = stock
         self.imagen = imagen
         self.disponible = disponible
-        self.__categoria: Categoria = categoria
+        self.categoria = categoria
 
     @property
     def nombre(self) -> str:
@@ -91,9 +92,13 @@ class Producto(Base):
             raise DatoInvalidoError("La categoría debe existir y no estar eliminada")
         self.__categoria = valor
 
+    def _restaurar_categoria(self, categoria: Categoria) -> None:
+        """Uso interno de los servicios para deshacer una edición fallida."""
+        self.__categoria = categoria
+
     def __str__(self) -> str:
         disp = "Sí" if self.disponible else "No"
         return (
-            f"[{self.id}] {self.nombre} | ${self.precio:.2f} | Stock: {self.stock} | "
+            f"[{self.id}] {self.nombre} | {formato_pesos(self.precio)} | Stock: {self.stock} | "
             f"Cat: {self.categoria.nombre} | Disp: {disp}"
         )

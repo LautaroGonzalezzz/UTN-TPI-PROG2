@@ -1,6 +1,7 @@
 from entidades.base import Base
 from entidades.producto import Producto
 from excepciones import DatoInvalidoError
+from formato import formato_pesos
 
 
 class DetallePedido(Base):
@@ -37,5 +38,5 @@ class DetallePedido(Base):
     def __str__(self) -> str:
         return (
             f"  - {self.producto.nombre} x{self.cantidad} "
-            f"(${self.producto.precio:.2f}) = ${self.subtotal:.2f}"
+            f"({formato_pesos(self.producto.precio)}) = {formato_pesos(self.subtotal)}"
         )

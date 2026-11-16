@@ -67,16 +67,13 @@ class Usuario(Base):
             raise DatoInvalidoError("El celular no puede estar vacío")
         self.__celular = valor.strip()
 
-    # Sin property de lectura para la contraseña
-    @property
-    def contrasenia(self) -> None:
-        raise AttributeError("La contraseña no se puede leer")
-
-    @contrasenia.setter
-    def contrasenia(self, valor: str) -> None:
+    def _set_contrasenia(self, valor: str) -> None:
         if not valor or not valor.strip():
             raise DatoInvalidoError("La contraseña no puede estar vacía")
         self.__contrasenia = valor
+
+    # Solo escritura: sin getter, la contraseña nunca sale del objeto
+    contrasenia = property(fset=_set_contrasenia)
 
     def verificar_contrasenia(self, contrasenia: str) -> bool:
         """Compara la contraseña recibida con la almacenada sin exponerla."""

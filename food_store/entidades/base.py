@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 
@@ -30,6 +30,11 @@ class Base(ABC):
     @property
     def creado_en(self) -> datetime:
         return self.__creado_en
+
+    @abstractmethod
+    def __str__(self) -> str:
+        """Cada entidad define su línea de texto para los listados."""
+        ...
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Base):

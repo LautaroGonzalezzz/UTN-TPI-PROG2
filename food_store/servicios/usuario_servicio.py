@@ -36,9 +36,7 @@ class UsuarioServicio:
     def buscar_por_mail(self, mail: str, solo_activos: bool = True) -> Optional[Usuario]:
         mail_norm = mail.strip().lower()
         for u in self.__usuarios:
-            if u.mail == mail_norm:
-                if solo_activos and u.eliminado:
-                    return None
+            if u.mail == mail_norm and not (solo_activos and u.eliminado):
                 return u
         return None
 
@@ -79,14 +77,16 @@ class UsuarioServicio:
         rol: Optional[Rol] = None,
     ) -> Usuario:
         usuario = self.buscar_por_id(id_usuario)
-        if nombre is not None and nombre.strip():
-            usuario.nombre = nombre
-        if apellido is not None and apellido.strip():
-            usuario.apellido = apellido
+        # El mail es el único campo que puede fallar (duplicado o formato):
+        # se procesa primero para no dejar la edición a medias.
         if mail is not None and mail.strip():
             if self._existe_mail(mail, excluir_id=id_usuario):
                 raise DuplicadoError(f"Ya existe un usuario con el mail '{mail}'")
             usuario.mail = mail
+        if nombre is not None and nombre.strip():
+            usuario.nombre = nombre
+        if apellido is not None and apellido.strip():
+            usuario.apellido = apellido
         if celular is not None and celular.strip():
             usuario.celular = celular
         if contrasenia is not None and contrasenia.strip():

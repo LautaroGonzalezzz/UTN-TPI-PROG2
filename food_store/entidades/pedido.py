@@ -7,6 +7,7 @@ from entidades.detalle_pedido import DetallePedido
 from entidades.producto import Producto
 from entidades.usuario import Usuario
 from enums import Estado, FormaPago
+from formato import formato_fecha, formato_pesos
 from excepciones import (
     DatoInvalidoError,
     StockInsuficienteError,
@@ -25,7 +26,8 @@ class Pedido(Base, Calculable):
         self.__fecha: date = date.today()
         self.__estado: Estado = Estado.PENDIENTE
         self.__total: float = 0.0
-        self.__forma_pago: FormaPago = forma_pago
+        self.__forma_pago: FormaPago = FormaPago.EFECTIVO
+        self.forma_pago = forma_pago
         self.__detalles: List[DetallePedido] = []
 
     @property
@@ -137,5 +139,5 @@ class Pedido(Base, Calculable):
     def __str__(self) -> str:
         return (
             f"[{self.id}] {self.usuario.nombre_completo()} | {self.estado} | "
-            f"{self.forma_pago} | Total: ${self.total:.2f} | {self.fecha}"
+            f"{self.forma_pago} | Total: {formato_pesos(self.total)} | {formato_fecha(self.fecha)}"
         )

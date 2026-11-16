@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from entidades import Producto, Categoria
-from excepciones import EntidadNoEncontradaError
+from excepciones import EntidadNoEncontradaError, FoodStoreError
 from servicios.categoria_servicio import CategoriaServicio
 
 
@@ -76,21 +76,31 @@ class ProductoServicio:
         id_categoria: Optional[int] = None,
     ) -> Producto:
         producto = self.buscar_por_id(id_producto)
-        if nombre is not None and nombre.strip():
-            producto.nombre = nombre
-        if precio is not None:
-            producto.precio = precio
-        if descripcion is not None and descripcion.strip() != "":
-            producto.descripcion = descripcion
-        if stock is not None:
-            producto.stock = stock
-        if imagen is not None:
-            producto.imagen = imagen
-        if disponible is not None:
-            producto.disponible = disponible
-        if id_categoria is not None:
-            categoria = self.__categoria_servicio.buscar_por_id(id_categoria)
-            producto.categoria = categoria
+        # Copia del estado actual: si algún setter falla se restaura todo
+        anterior = (
+            producto.nombre, producto.precio, producto.descripcion, producto.stock,
+            producto.imagen, producto.disponible, producto.categoria,
+        )
+        try:
+            if nombre is not None and nombre.strip():
+                producto.nombre = nombre
+            if precio is not None:
+                producto.precio = precio
+            if descripcion is not None and descripcion.strip() != "":
+                producto.descripcion = descripcion
+            if stock is not None:
+                producto.stock = stock
+            if imagen is not None:
+                producto.imagen = imagen
+            if disponible is not None:
+                producto.disponible = disponible
+            if id_categoria is not None:
+                producto.categoria = self.__categoria_servicio.buscar_por_id(id_categoria)
+        except FoodStoreError:
+            (producto.nombre, producto.precio, producto.descripcion, producto.stock,
+             producto.imagen, producto.disponible) = anterior[:6]
+            producto._restaurar_categoria(anterior[6])
+            raise
         return producto
 
     def eliminar(self, id_producto: int) -> None:

@@ -1,104 +1,50 @@
-from entidades import Usuario
-from excepciones import FoodStoreError
-from servicios import (
-    CategoriaServicio,
-    ProductoServicio,
-    UsuarioServicio,
-    PedidoServicio,
+from consola.estilos import aviso, error
+from consola.menu import Menu, Opcion
+from consola.utilidades import pedir_entero, pedir_si_no
+from consola.vistas import (
+    mostrar_categorias,
+    mostrar_datos_usuario,
+    mostrar_detalle_pedido,
+    mostrar_pedidos,
+    mostrar_productos,
 )
-from consola.menu import Menu
-from consola.utilidades import pedir_entero, pausa
 
 
 class MenuCliente(Menu):
     """Menú de solo consulta para el rol USUARIO."""
 
     def mostrar(self) -> bool:
-        while True:
-            print("\n" + "=" * 50)
-            print(f"=== FOOD STORE  CLIENTE ({self._usuario.nombre_completo()}) ===")
-            print("=" * 50)
-            print("1. Ver categorías")
-            print("2. Ver productos disponibles")
-            print("3. Mis pedidos")
-            print("4. Mis datos")
-            print("9. Cerrar sesión")
-            print("0. Salir")
-            opcion = input("Seleccione: ").strip()
-
-            try:
-                if opcion == "1":
-                    self._ver_categorias()
-                elif opcion == "2":
-                    self._ver_productos()
-                elif opcion == "3":
-                    self._mis_pedidos()
-                elif opcion == "4":
-                    self._mis_datos()
-                elif opcion == "9":
-                    print("\nSesión cerrada.")
-                    return True
-                elif opcion == "0":
-                    print("\n¡Hasta luego!")
-                    return False
-                else:
-                    print("   Opción inválida.")
-            except FoodStoreError as e:
-                print(f"   {e.mensaje}")
-            except ValueError:
-                print("   Valor numérico inválido.")
-            pausa()
+        opciones: list[Opcion] = [
+            ("1", "Ver categorías", self._ver_categorias),
+            ("2", "Ver productos disponibles", self._ver_productos),
+            ("3", "Mis pedidos", self._mis_pedidos),
+            ("4", "Mis datos", self._mis_datos),
+        ]
+        titulo: str = f"=== FOOD STORE – CLIENTE ({self._usuario.nombre_completo()}) ==="
+        return self._ejecutar_menu_principal(titulo, opciones, pausar=True)
 
     def _ver_categorias(self) -> None:
-        cats = self._categoria_servicio.listar()
-        if not cats:
-            print("No hay categorías cargadas.")
-            return
-        print("\nCategorías:")
-        for c in cats:
-            print(f"  {c}")
+        mostrar_categorias(self._categoria_servicio.listar())
 
     def _ver_productos(self) -> None:
-        prods = self._producto_servicio.listar(solo_disponibles_con_stock=True)
-        if not prods:
-            print("No hay productos disponibles con stock.")
-            return
-        print("\nProductos disponibles:")
-        for p in prods:
-            print(f"  {p}")
+        disponibles = self._producto_servicio.listar(solo_disponibles_con_stock=True)
+        mostrar_productos(disponibles, "No hay productos disponibles con stock.")
 
     def _mis_pedidos(self) -> None:
         pedidos = self._pedido_servicio.listar(id_usuario=self._usuario.id)
         if not pedidos:
-            print("No tenés pedidos registrados.")
+            aviso("No tenés pedidos registrados.")
             return
-        print("\nMis pedidos:")
-        for p in pedidos:
-            print(f"  {p}")
+        mostrar_pedidos(pedidos, "", con_usuario=False)
 
-        if pedir_si_no_simple("¿Ver detalles de algún pedido?"):
-            id_ped = pedir_entero("Id del pedido: ", minimo=1)
-            # Solo permite ver los propios
-            pedido = self._pedido_servicio.buscar_por_id(id_ped)
-            if pedido.usuario.id != self._usuario.id:
-                print("   Pedido no encontrado.")
-                return
-            print(f"\n{pedido}")
-            print("  Detalles:")
-            for d in pedido.detalles:
-                print(f"  {d}")
-            print(f"  TOTAL: ${pedido.total:.2f}")
+        if not pedir_si_no("¿Ver detalles de algún pedido?"):
+            return
+        id_pedido: int = pedir_entero("Id del pedido: ", minimo=1)
+        pedido = self._pedido_servicio.buscar_por_id(id_pedido)
+        if pedido.usuario.id != self._usuario.id:
+            error("Pedido no encontrado.")  # un pedido ajeno se informa como inexistente
+            return
+        mostrar_detalle_pedido(pedido)
 
     def _mis_datos(self) -> None:
-        u = self._usuario
-        print("\nMis datos:")
-        print(f"  Nombre:    {u.nombre}")
-        print(f"  Apellido:  {u.apellido}")
-        print(f"  Mail:      {u.mail}")
-        print(f"  Celular:   {u.celular}")
-        print(f"  Rol:       {u.rol}")
-
-
-def pedir_si_no_simple(mensaje: str) -> bool:
-    valor = input(f"{mensaje} (S/N): ").strip().upper()
-    return valor in ("S", "SI", "SÍ")
+        mostrar_datos_usuario(self._usuario)

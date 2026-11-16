@@ -29,11 +29,11 @@ from servicios import (
 
 
 def ok(msg: str) -> None:
-    print(f"   {msg}")
+    print(f"  – {msg}")
 
 
 def error_esperado(msg: str) -> None:
-    print(f"   Error esperado: {msg}")
+    print(f"  – Error esperado: {msg}")
 
 
 def seccion(titulo: str) -> None:
@@ -41,7 +41,7 @@ def seccion(titulo: str) -> None:
 
 
 def probar_entidades() -> None:
-    seccion("1. ENTIDADES  Constructores, encapsulamiento y validaciones")
+    seccion("1. ENTIDADES – Constructores, encapsulamiento y validaciones")
 
     # Categoría
     cat = Categoria("Pizzas", "Las mejores pizzas")
@@ -126,7 +126,7 @@ def probar_entidades() -> None:
 
 
 def probar_servicios() -> None:
-    seccion("2. SERVICIOS  Colecciones y reglas de negocio")
+    seccion("2. SERVICIOS – Colecciones y reglas de negocio")
 
     cat_srv = CategoriaServicio()
     prod_srv = ProductoServicio(cat_srv)
@@ -235,11 +235,75 @@ def probar_servicios() -> None:
         ok("Usuario eliminado no puede iniciar sesión")
 
 
+def probar_correcciones() -> None:
+    seccion("3. CORRECCIONES  Base abstracta, mail reutilizado y ediciones atómicas")
+    from entidades import Base
+    try:
+        Base()
+        assert False, "Base no debería instanciarse"
+    except TypeError:
+        ok("Base es abstracta: no se puede instanciar")
+
+    user_srv = UsuarioServicio()
+    admin = user_srv.crear("Ana", "Pérez", "a@t.com", "1", "x", Rol.ADMIN)
+    viejo = user_srv.crear("Juan", "Viejo", "j@t.com", "1", "viejo", Rol.USUARIO)
+    user_srv.eliminar(viejo.id, admin)
+    user_srv.crear("Juan", "Nuevo", "j@t.com", "1", "nuevo", Rol.USUARIO)
+    user_srv.autenticar("j@t.com", "nuevo")
+    ok("Un mail de usuario dado de baja se puede reutilizar y el nuevo inicia sesión")
+
+    otro = user_srv.crear("Luis", "R", "l@t.com", "1", "pw", Rol.USUARIO)
+    try:
+        user_srv.editar(otro.id, nombre="Cambiado", mail="a@t.com")
+        assert False
+    except DuplicadoError:
+        assert otro.nombre == "Luis"
+        error_esperado("mail duplicado al editar; no se modificó ningún campo")
+
+    cat_srv = CategoriaServicio()
+    prod_srv = ProductoServicio(cat_srv)
+    cat = cat_srv.crear("Pizzas", "desc")
+    prod = prod_srv.crear("Muza", 100.0, "d", 5, "", True, cat.id)
+    try:
+        prod_srv.editar(prod.id, precio=999.0, stock=-1)
+        assert False
+    except DatoInvalidoError:
+        assert prod.precio == 100.0 and prod.stock == 5
+        error_esperado("stock negativo al editar; el precio se restauró a 100.0")
+
+    try:
+        _ = admin.contrasenia
+        assert False
+    except AttributeError:
+        ok("La contraseña no se puede leer")
+
+
+def probar_formato_y_vistas() -> None:
+    seccion("4. FORMATO Y VISTAS  Pesos, fechas y tablas de consola")
+    from datetime import date
+
+    from consola.estilos import tabla
+    from formato import formato_fecha, formato_pesos
+
+    assert formato_pesos(8500) == "$8.500,00"
+    assert formato_pesos(1234567.5) == "$1.234.567,50"
+    assert formato_fecha(date(2026, 11, 16)) == "16/11/2026"
+    ok("formato_pesos y formato_fecha devuelven el formato argentino")
+
+    cat = Categoria("Pizzas", "desc")
+    prod = Producto("Muzzarella", 8500.0, "d", 3, "", True, cat)
+    assert "$8.500,00" in str(prod)
+    tabla(["ID", "Producto", "Precio"], [[str(prod.id), prod.nombre, formato_pesos(prod.precio)]], "rlr")
+    ok("tabla se imprime alineada (arriba)")
+
+
 def main() -> None:
     print("\n*** PRUEBAS FOOD STORE ***\n")
     try:
         probar_entidades()
         probar_servicios()
+        probar_correcciones()
+        probar_formato_y_vistas()
         print("\n" + "=" * 60)
         print("TODAS LAS PRUEBAS PASARON CORRECTAMENTE")
         print("=" * 60 + "\n")
