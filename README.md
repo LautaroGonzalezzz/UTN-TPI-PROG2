@@ -30,9 +30,9 @@ python pruebas.py
 
 ## Enlaces de la entrega
 
-- Video demostración: _(pegar enlace con permisos públicos de visualización)_
-- Informe PDF: _(pegar enlace o indicar el PDF subido a la raíz)_
-
+- Video demostración: https://youtu.be/E2KyS0OnTaM?si=Om-i51dKi3JijyD1
+- Informe PDF: file:///C:/Users/latip/Documents/UTN/Segundo%20Semestre/Programacion%20II/TPI/Food_Store_TPI.pdf
+  
 ## Estructura del proyecto
 
 ```
