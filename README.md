@@ -31,7 +31,7 @@ python pruebas.py
 ## Enlaces de la entrega
 
 - Video demostración: https://youtu.be/E2KyS0OnTaM?si=Om-i51dKi3JijyD1
-- Informe PDF: file:///C:/Users/latip/Documents/UTN/Segundo%20Semestre/Programacion%20II/TPI/Food_Store_TPI.pdf
+- Informe PDF: https://1drv.ms/w/c/5bfa0b6cab00cd6a/IQA4TiU1fJu-TodQIaejyVmYAQv3TS5aMOtqTMJD_Obse5c?e=OvuIZt
   
 ## Estructura del proyecto
 
